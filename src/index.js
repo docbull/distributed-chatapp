@@ -1,4 +1,3 @@
-// import { createLibp2p } from "libp2p/dist/src"
 import { createLibp2p } from "libp2p"
 import { TCP } from "@libp2p/tcp"
 import { Noise } from '@chainsafe/libp2p-noise'

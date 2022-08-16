@@ -1,44 +1,67 @@
-import { createLibp2p } from "libp2p"
-import { TCP } from "@libp2p/tcp"
+import { createLibp2p } from 'libp2p'
+import { WebSockets } from '@libp2p/websockets'
+import { WebRTCStar } from '@libp2p/webrtc-star'
 import { Noise } from '@chainsafe/libp2p-noise'
 import { Mplex } from '@libp2p/mplex'
-import { multiaddr } from 'multiaddr'
+import { Bootstrap } from '@libp2p/bootstrap'
 
-const main = async () => {
-    const node = await createLibp2p({
+document.addEventListener('DOMContentLoaded', async () => {
+    const webRtcStar = new WebRTCStar()
+
+    // create libp2p node
+    const libp2p = await createLibp2p({
         addresses: {
-            listen: ['/ip4/127.0.0.1/tcp/0']
+            listen: [
+                '/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star',
+                '/dns4/wrtc-star2.sjc.dwebops.pub/tcp/443/wss/p2p-webrtc-star'
+            ]
         },
-        transports: [new TCP()],
+        transports: [
+            new WebSockets(),
+            webRtcStar
+        ],
         connectionEncryption: [new Noise()],
-        streamMuxers: [new Mplex()]
+        streamMuxers: [new Mplex()],
+        peerDiscovery: [
+            webRtcStar.discovery,
+            new Bootstrap({
+                list: [
+                    '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
+                    '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+                    '/dnsaddr/bootstrap.libp2p.io/p2p/QmZa1sAxajnQjVM8WjWXoMbmPd7NsWhfKsPkErzpm9wGkp',
+                    '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
+                    '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt'
+                ]
+            })
+        ]
     })
-    
-    await node.start()
-    console.log("libp2p has started")
-    
-    console.log("listening on addresses")
-    node.getMultiaddrs().forEach((addr) => {
-        console.log(addr.toString())
-    })
-    
-    if (process.argv.length >= 3) {
-        const ma = multiaddr(process.argv[2])
-        console.log(`pinging remote peer at ${process.argv[2]}`)
-        const latency = await node.ping(ma)
-        console.log(`pinged ${process.argv[2]} in ${latency}ms`)
-    } else {
-        console.log('no remote peer address given, skipping ping')
+
+    const status = document.getElementById('status')
+    const output = document.getElementById('output')
+
+    output.textContent = ''
+
+    function log (txt) {
+        console.info(txt)
+        output.textContent += `${txt.trim()}\n`
     }
 
-    const stop = async () => {
-        await node.stop()
-        console.log('libp2p has stopped')
-        process.exit(0)
-    }
+    // print a log when a peer is discovered
+    libp2p.addEventListener('peer:discovery', (event) => {
+        const peer = event.detail
+        log(`Found peer ${peer.id.toString()}`)
+    })
 
-    process.on('SIGTERM', stop)
-    process.on('SIGINT', stop)
-}
+    // print a log when the peer is disconnected
+    libp2p.connectionManager.addEventListener('peer:disconnect', (event) => {
+        const connection = event.detail
+        log(`Disconnected from ${connection.remotePeer.toString()}`)
+    })
 
-main().then().catch(console.error)
+    // run the libp2p node
+    await libp2p.start()
+    status.innerText = 'libp2p started'
+    log(`libp2p node ID: ${libp2p.peerId.toString()}`)
+
+    window.libp2p = libp2p
+})

@@ -1,27 +1,22 @@
 {
   "name": "distributed-chatapp",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A libp2p node running in the browser",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "vite"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/docbull/distributed-chatapp.git"
-  },
-  "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/docbull/distributed-chatapp/issues"
-  },
-  "homepage": "https://github.com/docbull/distributed-chatapp#readme",
   "dependencies": {
     "@chainsafe/libp2p-noise": "^8.0.0",
+    "@libp2p/bootstrap": "^2.0.0",
     "@libp2p/mplex": "^5.0.0",
-    "@libp2p/tcp": "^3.0.3",
-    "libp2p": "^0.37.3",
-    "multiaddr": "^10.0.1"
+    "@libp2p/webrtc-star": "^3.0.0",
+    "@libp2p/websockets": "^3.0.0",
+    "libp2p": "^0.37.3"
   },
-  "type": "module"
+  "devDependencies": {
+    "vite": "^2.8.6"
+  }
 }
